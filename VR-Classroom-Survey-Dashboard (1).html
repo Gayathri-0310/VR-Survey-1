@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VR Classroom Survey · Insights Dashboard</title>
+<style>
+:root{
+  --bg:#050816;--card:rgba(17,24,52,.78);--line:rgba(120,140,255,.18);
+  --txt:#e8ecff;--mut:#9aa3c7;--c1:#22d3ee;--c2:#8b5cf6;--c3:#ec4899;--c4:#f59e0b;--c5:#10b981;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.grid-floor{position:fixed;left:-50%;right:-50%;bottom:0;height:45vh;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(34,211,238,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.18) 1px,transparent 1px);
+  background-size:60px 60px;transform:perspective(400px) rotateX(65deg);transform-origin:bottom;
+  mask-image:linear-gradient(to top,#000 10%,transparent 90%);-webkit-mask-image:linear-gradient(to top,#000 10%,transparent 90%);
+  animation:floor 3s linear infinite}
+@keyframes floor{to{background-position:0 60px}}
+.wrap{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:36px 22px 90px}
+
+/* header */
+header{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.logo{width:96px;height:60px;flex:none}
+.logo svg{width:100%;height:100%;animation:bob 3.5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+h1{font-size:clamp(26px,4.2vw,50px);font-weight:800;line-height:1.1;
+  background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c1));background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 8s linear infinite}
+@keyframes shine{to{background-position:300% 0}}
+.sub{color:var(--mut);margin-top:8px;font-size:clamp(14px,1.5vw,18px)}
+
+/* tabs */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 26px}
+.tab{background:rgba(17,24,52,.85);border:1px solid var(--line);color:var(--txt);padding:10px 20px;border-radius:999px;cursor:pointer;font-size:15px;transition:.25s}
+.tab:hover{border-color:var(--c1);transform:translateY(-2px)}
+.tab.active{background:linear-gradient(90deg,var(--c2),var(--c3));border-color:transparent;box-shadow:0 6px 24px rgba(236,72,153,.4)}
+
+/* layout */
+.section{margin-bottom:26px}
+.section-title{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--c1);margin:8px 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  position:relative;overflow:hidden;transition:transform .35s,box-shadow .35s,border-color .35s;animation:rise .7s ease both}
+.card:hover{transform:translateY(-4px);border-color:rgba(34,211,238,.5);box-shadow:0 14px 40px rgba(34,211,238,.15)}
+.card::before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:skewX(-20deg);animation:sweep 6s ease-in-out infinite}
+@keyframes sweep{0%,70%{left:-60%}100%{left:130%}}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.card h3{font-size:18px;margin-bottom:4px}
+.card .hint{color:var(--mut);font-size:13px;margin-bottom:16px}
+
+/* KPI */
+.kpi .ico{font-size:26px}
+.kpi .num{font-size:46px;font-weight:800;margin:6px 0 2px;line-height:1}
+.kpi .lbl{color:var(--mut);font-size:14px}
+.kpi:nth-child(1) .num{color:var(--c1)}.kpi:nth-child(2) .num{color:var(--c3)}
+.kpi:nth-child(3) .num{color:var(--c2)}.kpi:nth-child(4) .num{color:var(--c4)}
+.kpi:nth-child(2){animation-delay:.1s}.kpi:nth-child(3){animation-delay:.2s}.kpi:nth-child(4){animation-delay:.3s}
+
+/* bars */
+.bar-row{display:grid;grid-template-columns:150px 1fr 34px;align-items:center;gap:10px;margin:11px 0;font-size:14px}
+.bar-track{height:14px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--c1),var(--c2));transform-origin:left;animation:grow 1.4s cubic-bezier(.2,.8,.2,1) both;position:relative}
+.bar-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:glint 2.8s infinite}
+@keyframes glint{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.bar-row b{text-align:right}
+.bar-fill.pink{background:linear-gradient(90deg,var(--c2),var(--c3))}
+.bar-fill.gold{background:linear-gradient(90deg,var(--c4),var(--c3))}
+.bar-fill.green{background:linear-gradient(90deg,var(--c5),var(--c1))}
+
+/* donut */
+.donut-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center}
+.donut{width:220px;height:220px;position:relative}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut circle.seg{fill:none;stroke-width:26;transition:stroke-width .25s;cursor:pointer;animation:drawseg 1.6s ease both}
+.donut circle.seg:hover{stroke-width:34}
+@keyframes drawseg{from{stroke-dasharray:0 1000}}
+.donut .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+.donut .center b{font-size:30px}.donut .center span{color:var(--mut);font-size:12px}
+.legend{list-style:none;font-size:14px;min-width:200px}
+.legend li{display:flex;align-items:center;gap:8px;margin:7px 0;cursor:default}
+.legend i{width:12px;height:12px;border-radius:3px;flex:none}
+
+/* gauge */
+.gauge{width:100%;max-width:300px;margin:0 auto;display:block}
+.gauge .arc{animation:drawarc 2s ease both}
+@keyframes drawarc{from{stroke-dashoffset:283}}
+.gauge-txt{text-align:center;margin-top:-6px}
+.gauge-txt b{font-size:40px;color:var(--c3)}
+.gauge-txt div{color:var(--mut);font-size:14px}
+
+/* word cloud */
+.cloud{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;align-items:center;padding:10px 0}
+.cloud span{font-weight:700;animation:float 4s ease-in-out infinite;display:inline-block;cursor:default;transition:transform .2s}
+.cloud span:hover{transform:scale(1.2)}
+@keyframes float{50%{transform:translateY(-6px)}}
+
+/* quotes */
+.quote-box{min-height:150px;display:flex;flex-direction:column;justify-content:center}
+.quote{font-size:19px;line-height:1.5;font-style:italic;transition:opacity .5s}
+.quote::before{content:"“";font-size:60px;color:var(--c3);line-height:0;vertical-align:-22px;margin-right:6px}
+.qmeta{color:var(--mut);margin-top:12px;font-size:13px}
+.dots{display:flex;gap:6px;margin-top:14px}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;background:rgba(255,255,255,.25);cursor:pointer}
+.dots button.on{background:var(--c1);width:24px;border-radius:99px}
+
+/* takeaways */
+.takeaways{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.takeaways li{background:rgba(255,255,255,.04);border-left:3px solid var(--c1);padding:14px 16px;border-radius:10px;font-size:14.5px;line-height:1.5}
+.takeaways li:nth-child(2){border-color:var(--c3)}.takeaways li:nth-child(3){border-color:var(--c2)}.takeaways li:nth-child(4){border-color:var(--c4)}
+
+.note{color:var(--mut);font-size:12.5px;margin-top:22px;text-align:center}
+
+/* immersive */
+.imm-btn{position:fixed;right:22px;bottom:22px;z-index:5;background:linear-gradient(90deg,var(--c2),var(--c3));color:#fff;border:0;padding:13px 22px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 8px 28px rgba(139,92,246,.5)}
+.imm-btn:hover{transform:scale(1.05)}
+body.immersive .card{transform:perspective(900px) rotateX(4deg)}
+body.immersive .card:hover{transform:perspective(900px) rotateX(0) translateY(-4px)}
+
+.hidden{display:none!important}
+@media (max-width:600px){.bar-row{grid-template-columns:110px 1fr 28px;font-size:13px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="grid-floor"></div>
+
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 120 70" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+        <rect x="4" y="8" width="112" height="54" rx="16" fill="url(#lg)"/>
+        <circle cx="38" cy="35" r="13" fill="#0b1030"/><circle cx="82" cy="35" r="13" fill="#0b1030"/>
+        <circle cx="38" cy="35" r="5" fill="#22d3ee"/><circle cx="82" cy="35" r="5" fill="#ec4899"/>
+        <path d="M52 62 Q60 50 68 62" fill="#050816"/>
+      </svg>
+    </div>
+    <div>
+      <h1>VR Classroom Survey · Insights Dashboard</h1>
+      <p class="sub">What makes students lose interest, and how Virtual Reality could bring them back. Based on 55 student responses.</p>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="all">Overview</button>
+    <button class="tab" data-tab="pain">Pain points</button>
+    <button class="tab" data-tab="voice">Student voice</button>
+    <button class="tab" data-tab="vr">VR opportunity</button>
+  </nav>
+
+  <!-- KPIs -->
+  <section class="section" data-group="all">
+    <div class="section-title">At a glance</div>
+    <div class="kpis">
+      <div class="card kpi"><div class="ico">📋</div><div class="num" data-count="55">55</div><div class="lbl">Survey responses</div></div>
+      <div class="card kpi"><div class="ico">📉</div><div class="num" data-count="10">10</div><div class="lbl">Students named Statistics as hardest</div></div>
+      <div class="card kpi"><div class="ico">🥽</div><div class="num" data-count="14">14</div><div class="lbl">Students asked for VR in class</div></div>
+      <div class="card kpi"><div class="ico">💡</div><div class="num" data-count="47" data-suffix="%">47%</div><div class="lbl">Of concrete suggestions point to VR</div></div>
+    </div>
+  </section>
+
+  <!-- Pain points -->
+  <section class="section" data-group="all pain">
+    <div class="section-title">Pain points</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Hardest subjects to stay interested in</h3>
+        <p class="hint">Mentions per subject area (one answer can name several)</p>
+        <div id="subjects">
+          <div class="bar-row"><span>Accounts &amp; Finance</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><b>12</b></div>
+          <div class="bar-row"><span>Statistics</span><div class="bar-track"><div class="bar-fill" style="width:83%;animation-delay:.1s"></div></div><b>10</b></div>
+          <div class="bar-row"><span>EEE / Physics</span><div class="bar-track"><div class="bar-fill" style="width:58%;animation-delay:.2s"></div></div><b>7</b></div>
+          <div class="bar-row"><span>Maths / Algebra</span><div class="bar-track"><div class="bar-fill" style="width:50%;animation-delay:.3s"></div></div><b>6</b></div>
+          <div class="bar-row"><span>Theory subjects</span><div class="bar-track"><div class="bar-fill" style="width:42%;animation-delay:.4s"></div></div><b>5</b></div>
+          <div class="bar-row"><span>Management / MCOB</span><div class="bar-track"><div class="bar-fill" style="width:42%;animation-delay:.5s"></div></div><b>5</b></div>
+          <div class="bar-row"><span>Programming / CS</span><div class="bar-track"><div class="bar-fill" style="width:33%;animation-delay:.6s"></div></div><b>4</b></div>
+          <div class="bar-row"><span>All subjects</span><div class="bar-track"><div class="bar-fill" style="width:17%;animation-delay:.7s"></div></div><b>2</b></div>
+          <div class="bar-row"><span>Economics</span><div class="bar-track"><div class="bar-fill" style="width:8%;animation-delay:.8s"></div></div><b>1</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Why students lose interest</h3>
+        <p class="hint">Reasons given in answers. Hover a segment for details.</p>
+        <div class="donut-wrap">
+          <div class="donut">
+            <svg viewBox="0 0 200 200" id="donutSvg">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="26"/>
+            </svg>
+            <div class="center" id="donutCenter"><b>28</b><span>reasons given</span></div>
+          </div>
+          <ul class="legend" id="legend"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VR opportunity -->
+  <section class="section" data-group="all vr">
+    <div class="section-title">VR opportunity</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>VR demand meter</h3>
+        <p class="hint">Share of concrete suggestions that mention VR (14 of 30)</p>
+        <svg class="gauge" viewBox="0 0 200 115">
+          <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+          <path d="M10 105 A90 90 0 0 1 190 105" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="16" stroke-linecap="round"/>
+          <path class="arc" d="M10 105 A90 90 0 0 1 190 105" fill="none" stroke="url(#gg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="150"/>
+        </svg>
+        <div class="gauge-txt"><b data-count="47" data-suffix="%">47%</b><div>Nearly half of real ideas ask for VR</div></div>
+      </div>
+
+      <div class="card">
+        <h3>How students want classes improved</h3>
+        <p class="hint">Themes from "Any suggestions to make classes more practical and engaging?"</p>
+        <div class="bar-row"><span>🥽 Use VR</span><div class="bar-track"><div class="bar-fill pink" style="width:100%"></div></div><b>14</b></div>
+        <div class="bar-row"><span>🛠️ Practical / real-life</span><div class="bar-track"><div class="bar-fill green" style="width:57%;animation-delay:.1s"></div></div><b>8</b></div>
+        <div class="bar-row"><span>🎬 Videos &amp; animation</span><div class="bar-track"><div class="bar-fill gold" style="width:29%;animation-delay:.2s"></div></div><b>4</b></div>
+        <div class="bar-row"><span>👩‍🏫 Better teaching</span><div class="bar-track"><div class="bar-fill" style="width:21%;animation-delay:.3s"></div></div><b>3</b></div>
+        <div class="bar-row"><span>💬 Other ideas</span><div class="bar-track"><div class="bar-fill" style="width:21%;animation-delay:.4s"></div></div><b>3</b></div>
+        <div class="bar-row"><span>🤷 No suggestion</span><div class="bar-track"><div class="bar-fill" style="width:100%;opacity:.35;animation-delay:.5s"></div></div><b>17</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Student voice -->
+  <section class="section" data-group="all voice">
+    <div class="section-title">Student voice</div>
+    <div class="grid2">
+      <div class="card">
+        <h3>What students keep saying</h3>
+        <p class="hint">Common words and themes across both questions</p>
+        <div class="cloud" id="cloud"></div>
+      </div>
+      <div class="card">
+        <h3>In their own words</h3>
+        <p class="hint">Real answers from the survey</p>
+        <div class="quote-box">
+          <div class="quote" id="quote">Vr is the only way to be class attentive and more convenient</div>
+          <div class="qmeta" id="qmeta">On making classes engaging</div>
+          <div class="dots" id="dots"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Takeaways -->
+  <section class="section" data-group="all vr pain">
+    <div class="section-title">Key takeaways</div>
+    <div class="card">
+      <ul class="takeaways">
+        <li><b>Numbers-heavy subjects hurt most.</b> Accounts, Finance and Statistics top the list, mainly because of formulas and calculations.</li>
+        <li><b>Theory without practice loses students.</b> Many say subjects feel boring or can't connect to real life.</li>
+        <li><b>VR is the top request.</b> 14 students asked for VR, nearly half of all concrete ideas.</li>
+        <li><b>Hard-to-visualise topics fit VR well.</b> Physics, EEE, case studies and simulations were named as places VR could help.</li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="note">Themes were grouped from open-ended answers. One answer can count under more than one theme. Source: VR Classroom Survey (55 responses).</p>
+</div>
+
+<button class="imm-btn" id="immBtn">🥽 Immersive mode</button>
+
+<script>
+(function(){
+  "use strict";
+  function safe(fn){try{fn();}catch(e){if(window.console)console.warn(e);}}
+
+  /* ---------- Donut chart ---------- */
+  safe(function(){
+    var data=[
+      {l:"Too many formulas & calculations",v:11,c:"#22d3ee"},
+      {l:"Too theoretical / no practice",v:9,c:"#8b5cf6"},
+      {l:"Hard to visualise or understand",v:5,c:"#ec4899"},
+      {l:"Heavy or repeated syllabus",v:2,c:"#f59e0b"},
+      {l:"Teaching quality",v:1,c:"#10b981"}
+    ];
+    var total=0;data.forEach(function(d){total+=d.v;});
+    var svg=document.getElementById("donutSvg"),legend=document.getElementById("legend"),center=document.getElementById("donutCenter");
+    var C=2*Math.PI*80,off=0,NS="<redacted URL>";
+    var defaultCenter=center.innerHTML;
+    data.forEach(function(d,i){
+      var len=d.v/total*C;
+      var c=document.createElementNS(NS,"circle");
+      c.setAttribute("cx","100");c.setAttribute("cy","100");c.setAttribute("r","80");
+      c.setAttribute("class","seg");c.setAttribute("stroke",d.c);
+      c.setAttribute("stroke-dasharray",(len-2)+" "+(C-len+2));
+      c.setAttribute("stroke-dashoffset",String(-off));
+      c.style.animationDelay=(i*0.15)+"s";
+      var show=function(){center.innerHTML="<b style='color:"+d.c+"'>"+d.v+"</b><span>"+d.l+"</span>";};
+      var hide=function(){center.innerHTML=defaultCenter;};
+      c.addEventListener("mouseenter",show);c.addEventListener("mouseleave",hide);
+      svg.appendChild(c);
+      off+=len;
+      var li=document.createElement("li");
+      li.innerHTML="<i style='background:"+d.c+"'></i>"+d.l+" <b style='margin-left:auto'>"+d.v+"</b>";
+      li.addEventListener("mouseenter",show);li.addEventListener("mouseleave",hide);
+      legend.appendChild(li);
+    });
+  });
+
+  /* ---------- Word cloud ---------- */
+  safe(function(){
+    var words=[["VR",44,"#ec4899"],["Practical",34,"#22d3ee"],["Statistics",32,"#8b5cf6"],["Formulas",26,"#f59e0b"],["Theory",28,"#22d3ee"],
+      ["Real-life",24,"#10b981"],["Accounts",26,"#8b5cf6"],["Boring",22,"#ec4899"],["Simulations",20,"#22d3ee"],["Calculations",20,"#f59e0b"],
+      ["Case studies",18,"#10b981"],["Visualise",18,"#ec4899"],["Videos",17,"#f59e0b"],["Role-play",16,"#8b5cf6"],["Industry visits",15,"#22d3ee"],
+      ["Virtual labs",16,"#10b981"],["EEE",18,"#8b5cf6"],["Maths",20,"#f59e0b"],["Interactive",16,"#ec4899"],["Group activities",14,"#22d3ee"]];
+    var box=document.getElementById("cloud");
+    words.forEach(function(w,i){
+      var s=document.createElement("span");
+      s.textContent=w[0];s.style.fontSize=w[1]+"px";s.style.color=w[2];
+      s.style.animationDelay=(i%7*0.4)+"s";
+      box.appendChild(s);
+    });
+  });
+
+  /* ---------- Rotating quotes ---------- */
+  safe(function(){
+    var quotes=[
+      ["Vr is the only way to be class attentive and more convenient","On making classes engaging"],
+      ["I find Statistics the hardest subject to stay interested in because it involves many formulas, calculations, and complex concepts.","On the hardest subject"],
+      ["Create separate case study problems and make it look real through the VR and make students solve the problem","On making classes engaging"],
+      ["Engineering physics and basic electrical engineering. It is hard to visualize.","On the hardest subject"],
+      ["showing practical examples in vr or making industrial visit thru vr","On making classes engaging"],
+      ["DAA which is full of algorithms and mathematics can't able to connect with real time.","On the hardest subject"],
+      ["Include more virtual labs and business simulations instead of just theory","On making classes engaging"],
+      ["20% theory and 80% practical","On making classes engaging"]
+    ];
+    var q=document.getElementById("quote"),m=document.getElementById("qmeta"),dots=document.getElementById("dots"),idx=0,btns=[];
+    function go(i){
+      idx=i;q.style.opacity=0;
+      setTimeout(function(){q.textContent=quotes[i][0];m.textContent=quotes[i][1];q.style.opacity=1;},350);
+      btns.forEach(function(b,j){b.className=j===i?"on":"";});
+    }
+    quotes.forEach(function(_,i){
+      var b=document.createElement("button");b.setAttribute("aria-label","Quote "+(i+1));
+      b.addEventListener("click",function(){go(i);});dots.appendChild(b);btns.push(b);
+    });
+    btns[0].className="on";
+    setInterval(function(){go((idx+1)%quotes.length);},5000);
+  });
+
+  /* ---------- Count-up numbers (text already holds final value) ---------- */
+  safe(function(){
+    var els=document.querySelectorAll("[data-count]");
+    Array.prototype.forEach.call(els,function(el){
+      var end=parseInt(el.getAttribute("data-count"),10),suf=el.getAttribute("data-suffix")||"",t0=null,dur=1600;
+      function step(ts){
+        if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3);
+        el.textContent=Math.round(end*e)+suf;
+        if(p<1)requestAnimationFrame(step);else el.textContent=end+suf;
+      }
+      if(window.requestAnimationFrame)requestAnimationFrame(step);
+    });
+  });
+
+  /* ---------- Tabs (all sections show if JS fails) ---------- */
+  safe(function(){
+    var tabs=document.querySelectorAll(".tab"),secs=document.querySelectorAll("[data-group]");
+    Array.prototype.forEach.call(tabs,function(t){
+      t.addEventListener("click",function(){
+        Array.prototype.forEach.call(tabs,function(x){x.classList.remove("active");});
+        t.classList.add("active");
+        var key=t.getAttribute("data-tab");
+        Array.prototype.forEach.call(secs,function(s){
+          var groups=s.getAttribute("data-group").split(" ");
+          var show=key==="all"||groups.indexOf(key)>-1;
+          s.classList.toggle("hidden",!show);
+          if(show){
+            /* replay card animations */
+            Array.prototype.forEach.call(s.querySelectorAll(".card,.bar-fill,.seg"),function(c){
+              c.style.animationName="none";void c.offsetWidth;c.style.animationName="";
+            });
+          }
+        });
+      });
+    });
+  });
+
+  /* ---------- Starfield background ---------- */
+  var speed=2;
+  safe(function(){
+    var cv=document.getElementById("stars"),ctx=cv.getContext("2d");if(!ctx)return;
+    var W,H,stars=[],N=260;
+    function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+    resize();window.addEventListener("resize",resize);
+    for(var i=0;i<N;i++)stars.push({x:(Math.random()-.5)*2,y:(Math.random()-.5)*2,z:Math.random()});
+    function frame(){
+      ctx.fillStyle="rgba(5,8,22,.35)";ctx.fillRect(0,0,W,H);
+      for(var i=0;i<N;i++){
+        var s=stars[i];s.z-=0.0025*speed;
+        if(s.z<=0.01){s.x=(Math.random()-.5)*2;s.y=(Math.random()-.5)*2;s.z=1;}
+        var px=W/2+s.x/s.z*W*0.35,py=H/2+s.y/s.z*H*0.35,r=(1-s.z)*2.2;
+        if(px<0||px>W||py<0||py>H){s.z=1;continue;}
+        ctx.beginPath();ctx.arc(px,py,r,0,6.283);
+        ctx.fillStyle=i%5===0?"rgba(236,72,153,"+(1-s.z)+")":i%3===0?"rgba(34,211,238,"+(1-s.z)+")":"rgba(255,255,255,"+(1-s.z)+")";
+        ctx.fill();
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  });
+
+  /* ---------- Immersive mode ---------- */
+  safe(function(){
+    var b=document.getElementById("immBtn"),on=false;
+    b.addEventListener("click",function(){
+      on=!on;document.body.classList.toggle("immersive",on);
+      speed=on?7:2;b.textContent=on?"✨ Exit immersive":"🥽 Immersive mode";
+    });
+  });
+})();
+</script>
+</body>
+</html>
